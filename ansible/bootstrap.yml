@@ -1,0 +1,39 @@
+---
+- name: FULL OpenShift UPI bootstrap
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars:
+    project: ocp-upi-lab
+    region: europe-central2
+    zone: europe-central2-a
+    cluster_name: ocp
+    base_domain: ocp.local
+
+  tasks:
+
+    - name: Set gcloud project
+      command: gcloud config set project {{ project }}
+
+    - name: Set compute region
+      command: gcloud config set compute/region {{ region }}
+
+    - name: Set compute zone
+      command: gcloud config set compute/zone {{ zone }}
+
+    - name: Enable required GCP APIs
+      command: gcloud services enable compute.googleapis.com cloudresourcemanager.googleapis.com dns.googleapis.com iam.googleapis.com
+
+    - name: Create working directory
+      file:
+        path: ~/ocp-upi/install
+        state: directory
+
+    - name: Generate install-config.yaml
+      shell: |
+        cd ~/ocp-upi/install
+        rm -f install-config.yaml
+        openshift-install create install-config
+      args:
+        executable: /bin/bash

@@ -1,13 +1,15 @@
-variable "project_id" {
-  description = "GCP Project ID"
-}
-
+variable "project_id" {}
 variable "region" {
-  description = "GCP region"
-  default     = "us-central1"
+  default = "europe-central2"
+}
+variable "zone" {
+  default = "europe-central2-a"
 }
 
-variable "zone" {
-  description = "GCP zone"
-  default     = "us-central1-a"
+variable "ssh_user" {
+  default = "devops"
+}
+
+variable "ssh_pub_key_path" {
+  default = "/home/devops/.ssh/google_compute_engine.pub"
 }
