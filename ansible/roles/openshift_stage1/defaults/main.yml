@@ -1,0 +1,14 @@
+cluster_dir: "/home/devops/openshift-install/cluster"
+
+cluster_name: "ocp"
+base_domain: "lab.local"
+
+master_replicas: 3
+worker_replicas: 2
+
+cluster_network_cidr: "10.128.0.0/14"
+cluster_network_hostprefix: 23
+service_network_cidr: "172.30.0.0/16"
+
+pull_secret_file: "pull-secret.txt"
+ssh_key_path: "/home/devops/.ssh/id_rsa.pub"

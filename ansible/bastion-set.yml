@@ -5,3 +5,5 @@
 
   roles:
     - bastion
+    - openshift_stage1
+

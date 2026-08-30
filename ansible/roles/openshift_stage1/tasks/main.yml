@@ -1,0 +1,140 @@
+
+# -------------------------
+# OWNERSHIP FIX (CRITICAL)
+# -------------------------
+- name: Ensure OpenShift workspace ownership
+  file:
+    path: "{{ cluster_dir | dirname }}"
+    state: directory
+    owner: devops
+    group: devops
+    recurse: yes
+  become: yes
+
+# -------------------------
+# CREATE CLUSTER DIR
+# -------------------------
+- name: Ensure cluster directory exists
+  file:
+    path: "{{ cluster_dir }}"
+    state: directory
+    mode: "0755"
+    owner: devops
+    group: devops
+
+# -------------------------
+# CHECK BINARIES
+# -------------------------
+- name: Check oc client
+  command: oc version --client
+  register: oc_ver
+  changed_when: false
+
+- name: Check openshift-install
+  command: openshift-install version
+  register: inst_ver
+  changed_when: false
+
+- name: Show versions
+  debug:
+    msg:
+      - "{{ oc_ver.stdout }}"
+      - "{{ inst_ver.stdout }}"
+
+# -------------------------
+# SSH KEY
+# -------------------------
+- name: Generate SSH key for devops user
+  openssh_keypair:
+    path: /home/devops/.ssh/id_rsa
+    type: rsa
+    size: 4096
+    owner: devops
+    group: devops
+    mode: '0600'
+  become_user: devops
+
+- name: Read SSH public key
+  slurp:
+    src: "/home/devops/.ssh/id_rsa.pub"
+  register: ssh_pub
+
+- name: Decode SSH key
+  set_fact:
+    ssh_key: "{{ ssh_pub.content | b64decode | trim }}"
+
+# -------------------------
+# PULL SECRET (LOCAL MACHINE)
+# -------------------------
+- name: Read pull secret from local machine
+  slurp:
+    src: "{{ playbook_dir }}/../pull-secret.txt"
+  delegate_to: localhost
+  become: false
+  register: pull_secret_raw
+
+- name: Decode pull secret
+  set_fact:
+    pull_secret_clean: "{{ pull_secret_raw.content | b64decode | trim }}"
+
+# -------------------------
+# INSTALL CONFIG
+# -------------------------
+- name: Render install-config.yaml
+  template:
+    src: install-config.yaml.j2
+    dest: "{{ cluster_dir }}/install-config.yaml"
+    mode: "0644"
+
+# -------------------------
+# VALIDATE CONFIG EXISTS
+# -------------------------
+- name: Check install-config.yaml exists
+  stat:
+    path: "{{ cluster_dir }}/install-config.yaml"
+  register: installcfg
+
+- name: Fail if install-config missing
+  fail:
+    msg: "install-config.yaml was not created correctly"
+  when: not installcfg.stat.exists
+
+# -------------------------
+# MANIFESTS
+# -------------------------
+- name: Create manifests
+  command: openshift-install create manifests
+  become: false
+  args:
+    chdir: "{{ cluster_dir }}"
+
+# -------------------------
+# IGNITION
+# -------------------------
+- name: Create ignition configs
+  command: openshift-install create ignition-configs
+  become: false
+  args:
+    chdir: "{{ cluster_dir }}"
+
+# -------------------------
+# DEBUG OUTPUT
+# -------------------------
+- name: List cluster artifacts
+  command: ls -lah {{ cluster_dir }}
+  register: result
+  changed_when: false
+
+- name: Show artifacts
+  debug:
+    var: result.stdout_lines
+
+- name: Fetch ignition files from bastion
+  fetch:
+    src: "/home/devops/openshift-install/cluster/{{ item }}"
+    dest: "../../terraform/cluster/files/"
+    flat: yes
+  loop:
+    - bootstrap.ign
+    - master.ign
+    - worker.ign

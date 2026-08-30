@@ -1,8 +1,3 @@
----
-- name: Update apt cache
-  apt:
-    update_cache: yes
-
 - name: Install base packages
   apt:
     name:
@@ -13,61 +8,37 @@
       - tar
       - vim
       - ca-certificates
-      - gzip
     state: present
 
-- name: Install podman
-  apt:
-    name: podman
-    state: present
-
-# -------------------------
-# OpenShift CLI (oc)
-# -------------------------
 - name: Download oc client
   get_url:
-    url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz"
+    url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ ocp_version }}/openshift-client-linux.tar.gz"
     dest: /tmp/oc.tar.gz
     mode: '0644'
 
 - name: Extract oc client
   unarchive:
     src: /tmp/oc.tar.gz
-    dest: /tmp/
+    dest: /usr/local/bin/
     remote_src: yes
 
-- name: Install oc binary
-  copy:
-    src: /tmp/oc
-    dest: /usr/local/bin/oc
-    mode: '0755'
-    remote_src: yes
-
-- name: Install kubectl binary
-  copy:
-    src: /tmp/kubectl
-    dest: /usr/local/bin/kubectl
-    mode: '0755'
-    remote_src: yes
-
-# -------------------------
-# OpenShift Installer
-# -------------------------
 - name: Download openshift-install
   get_url:
-    url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-install-linux.tar.gz"
-    dest: /tmp/openshift-install.tar.gz
+    url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ ocp_version }}/openshift-install-linux.tar.gz"
+    dest: /tmp/install.tar.gz
     mode: '0644'
 
 - name: Extract openshift-install
   unarchive:
-    src: /tmp/openshift-install.tar.gz
-    dest: /tmp/
+    src: /tmp/install.tar.gz
+    dest: /usr/local/bin/
     remote_src: yes
 
-- name: Install openshift-install binary
-  copy:
-    src: /tmp/openshift-install
-    dest: /usr/local/bin/openshift-install
+- name: Ensure binaries executable
+  file:
+    path: "{{ item }}"
     mode: '0755'
-    remote_src: yes
+  loop:
+    - /usr/local/bin/oc
+    - /usr/local/bin/kubectl
+    - /usr/local/bin/openshift-install

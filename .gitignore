@@ -22,3 +22,13 @@ ansible/inventory.ini
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Secrets & Logs
+pull-secret.txt
+*.log
+# Large binaries & RHCOS images
+*.tar.gz
+*.tgz
+*.iso
+.terraform/
+.terraform.lock.hcl

@@ -1,32 +1,37 @@
 #!/bin/bash
 set -e
-BASTION_IP=$(cd terraform && terraform output -raw bastion_ip)
-USER=$(cd terraform && terraform output -raw ssh_user)
+
+TF_DIR="terraform/infra"
+
+BASTION_IP=$(cd $TF_DIR && terraform output -raw bastion_ip)
+SSH_USER=$(cd $TF_DIR && terraform output -raw ssh_user)
+
 KEY="$HOME/.ssh/google_compute_engine"
 
-mkdir -p ~/.ssh/config.d
+SSH_CONFIG="$HOME/.ssh/config"
 
-cat > ~/.ssh/config <<EOF
+echo "[INFO] Generating SSH config..."
+
+cat > "$SSH_CONFIG" <<EOF
 
 Host bastion
   HostName $BASTION_IP
-  User $USER
+  User $SSH_USER
   IdentityFile $KEY
   IdentitiesOnly yes
   StrictHostKeyChecking accept-new
 
-Host master-*
-  User $USER
-  IdentityFile $KEY
-  ProxyJump bastion
-  IdentitiesOnly yes
-
-Host worker-*
-  User $USER
-  IdentityFile $KEY
-  ProxyJump bastion
-  IdentitiesOnly yes
-
 EOF
 
-echo "SSH config generated"
+chmod 600 "$SSH_CONFIG"
+
+echo "[INFO] SSH config generated -> $SSH_CONFIG"
+echo "[INFO] Bastion: $BASTION_IP"
+
+
+# Host 10.10.0.*
+#  User $SSH_USER
+#  ProxyJump bastion
+#  IdentityFile $KEY
+#  IdentitiesOnly yes
+#  StrictHostKeyChecking accept-new
