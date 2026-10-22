@@ -178,9 +178,9 @@ resource "google_compute_instance" "worker" {
   depends_on = [google_storage_bucket_iam_member.public_viewer]
 }
 
-# ==============================================================================
+# ===============================================================================
 # INTERNAL NATYWNY LOAD BALANCER GCP DLA OPENSHIFT KUBE-API (Port 6443)
-# ==============================================================================
+# ===============================================================================
 
 # 1. Grupa instancji grupująca nasze 3 Mastery
 resource "google_compute_instance_group" "ocp_masters_group" {
