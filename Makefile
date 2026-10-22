@@ -12,8 +12,16 @@ set-bastion:
 cluster:
 	cd terraform/cluster && terraform apply -auto-approve
 
-ssh:
-	ssh bastion
+crc:
+	cd terraform/crc && terraform apply -auto-approve
+	./scripts/set-crc.sh
+
+delete-crc:
+	cd terraform/crc && terraform destroy -auto-approve	
+	truncate -s 0 ~/.ssh/known_hosts
+	
+delete-bootstrap:
+	gcloud compute instances delete bootstrap --zone=europe-central2-a
 
 destroy_cluster:
 	cd terraform/cluster && terraform destroy -auto-approve
