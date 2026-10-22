@@ -8,6 +8,9 @@
       - tar
       - vim
       - ca-certificates
+      - apache2-utils
+      - dnsutils
+      - netcat-openbsd
     state: present
 
 - name: Download oc client
@@ -42,3 +45,11 @@
     - /usr/local/bin/oc
     - /usr/local/bin/kubectl
     - /usr/local/bin/openshift-install
+
+- name: Configure KUBECONFIG in bashrc
+  blockinfile:
+    path: /home/devops/.bashrc
+    block: |
+      export KUBECONFIG=/home/devops/openshift-install/cluster/auth/kubeconfig
+      source <(oc completion bash)
+    state: present

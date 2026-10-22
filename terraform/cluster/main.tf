@@ -56,7 +56,7 @@ resource "google_compute_image" "rhcos" {
 # BOOTSTRAP (Ustawiony na COUNT = 0 - Terraform go bezpiecznie usunie)
 # ==============================================================================
 resource "google_compute_instance" "bootstrap" {
-  count        = 0 # Zmienione z 1 na 0 - misja zakończona sukcesem!
+  count        = 1 # Zmienione z 1 na 0 - misja zakończona sukcesem!
   name         = "bootstrap"
   machine_type = "e2-standard-4"
   zone         = var.zone
@@ -187,7 +187,11 @@ resource "google_compute_instance_group" "ocp_masters_group" {
   name        = "ocp-masters-group"
   zone        = var.zone
   description = "Niemenadżowana grupa maszyn Master dla Load Balancera"
-  instances   = google_compute_instance.master[*].id
+  instances   = concat(
+    google_compute_instance.bootstrap[*].self_link,
+    google_compute_instance.master[*].self_link
+  )
+
 
   named_port {
     name = "api"
